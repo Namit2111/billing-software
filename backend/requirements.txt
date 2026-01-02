@@ -1,0 +1,34 @@
+# FastAPI & Server
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Supabase
+supabase
+python-jose[cryptography]
+
+# Pydantic & Validation
+pydantic
+pydantic-settings
+email-validator
+
+# PDF Generation
+reportlab
+weasyprint
+
+# Email
+resend
+
+# Utilities
+python-dateutil
+httpx
+Pillow
+
+# Testing
+pytest
+pytest-asyncio
+httpx
+
+# Development
+python-dotenv
+
