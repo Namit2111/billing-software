@@ -26,16 +26,16 @@ class AuthService:
         email: str,
         password: str,
         full_name: str,
-        company_name: Optional[str] = None
+        company_name: str
     ) -> Dict[str, Any]:
         """
-        Register a new user with optional organization
+        Register a new user with organization
         
         Args:
             email: User email
             password: User password
             full_name: User's full name
-            company_name: Optional company name to create organization
+            company_name: Company name to create organization
             
         Returns:
             Dict with user and session data
@@ -61,18 +61,17 @@ class AuthService:
             
             user_id = str(auth_response.user.id)
             
-            # Create organization if company name provided (use admin client to bypass RLS)
-            organization_id = None
-            if company_name:
-                try:
-                    org_repo_admin = OrganizationRepository(self.admin_supabase)
-                    org = await org_repo_admin.create({
-                        "name": company_name
-                    })
-                    organization_id = org["id"]
-                except APIError as e:
-                    # If org creation fails, still continue with user creation
-                    print(f"Warning: Failed to create organization: {e}")
+            # Create organization (use admin client to bypass RLS)
+            try:
+                org_repo_admin = OrganizationRepository(self.admin_supabase)
+                org = await org_repo_admin.create({
+                    "name": company_name
+                })
+                organization_id = org["id"]
+            except APIError as e:
+                # If org creation fails, raise error
+                print(f"Error: Failed to create organization: {e}")
+                raise BadRequestError(f"Failed to create organization: {str(e)}")
 
             # Create user record in our database (use admin client to bypass RLS)
             try:
@@ -81,7 +80,7 @@ class AuthService:
                     "email": email,
                     "full_name": full_name,
                     "organization_id": organization_id,
-                    "role": "owner" if organization_id else "member"
+                    "role": "owner"
                 })
             except APIError as e:
                 if "duplicate key" in str(e):

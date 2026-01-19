@@ -25,12 +25,60 @@ router = APIRouter()
 
 # Organization settings
 
+@router.post("/organization", response_model=SuccessResponse[OrganizationResponse], status_code=201)
+async def create_organization(
+    data: dict,
+    supabase: Client = Depends(get_supabase_admin_client),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a new organization for the current user
+    
+    Only available for users without an organization.
+    """
+    from fastapi import HTTPException
+    
+    # Check if user already has an organization
+    if current_user.get("organization_id"):
+        raise HTTPException(
+            status_code=400,
+            detail="User already belongs to an organization"
+        )
+    
+    # Validate organization name
+    name = data.get("name")
+    if not name or not name.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Organization name is required"
+        )
+    
+    org_service = OrganizationService(supabase)
+    org = await org_service.create(
+        name=name.strip(),
+        owner_id=current_user["id"]
+    )
+    
+    return SuccessResponse(
+        data=org,
+        message="Organization created successfully"
+    )
+
+
 @router.get("/organization", response_model=SuccessResponse[OrganizationResponse])
 async def get_organization_settings(
     supabase: Client = Depends(get_supabase_admin_client),
     current_user: dict = Depends(get_current_user)
 ):
     """Get organization settings"""
+    from fastapi import HTTPException
+    
+    if not current_user.get("organization_id"):
+        raise HTTPException(
+            status_code=400,
+            detail="User is not associated with an organization"
+        )
+    
     org_service = OrganizationService(supabase)
     org = await org_service.get(current_user["organization_id"])
     

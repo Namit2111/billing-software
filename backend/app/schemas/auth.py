@@ -16,7 +16,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
-    company_name: Optional[str] = Field(None, max_length=200)
+    company_name: str = Field(..., min_length=2, max_length=200, description="Company/Organization name")
 
 
 class TokenResponse(BaseModel):

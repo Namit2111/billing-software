@@ -20,20 +20,37 @@ async def get_dashboard_stats(
 ):
     """
     Get dashboard statistics
-    
+
     Returns overview of invoices, revenue, and outstanding amounts.
     """
+    # Check if user has an organization
+    organization_id = current_user.get("organization_id")
+    if not organization_id:
+        return SuccessResponse(data={
+            "total_invoices": 0,
+            "total_revenue": 0,
+            "paid_amount": 0,
+            "outstanding_amount": 0,
+            "overdue_amount": 0,
+            "overdue_count": 0,
+            "draft_count": 0,
+            "sent_count": 0,
+            "paid_count": 0,
+            "client_count": 0,
+            "currency": "USD"
+        })
+
     dashboard_service = DashboardService(supabase)
     org_service = OrganizationService(supabase)
-    
+
     # Get organization currency
-    org = await org_service.get(current_user["organization_id"])
-    
+    org = await org_service.get(organization_id)
+
     stats = await dashboard_service.get_stats(
-        organization_id=current_user["organization_id"],
+        organization_id=organization_id,
         currency=org.get("currency", "USD")
     )
-    
+
     return SuccessResponse(data=stats)
 
 
@@ -45,16 +62,21 @@ async def get_recent_activity(
 ):
     """
     Get recent activity
-    
+
     Returns list of recent invoice and client activities.
     """
+    # Check if user has an organization
+    organization_id = current_user.get("organization_id")
+    if not organization_id:
+        return SuccessResponse(data=[])
+
     dashboard_service = DashboardService(supabase)
-    
+
     activities = await dashboard_service.get_recent_activity(
-        organization_id=current_user["organization_id"],
+        organization_id=organization_id,
         limit=limit
     )
-    
+
     return SuccessResponse(data=activities)
 
 
@@ -65,16 +87,21 @@ async def get_overdue_invoices(
 ):
     """
     Get overdue invoices
-    
+
     Returns list of invoices past their due date.
     """
+    # Check if user has an organization
+    organization_id = current_user.get("organization_id")
+    if not organization_id:
+        return SuccessResponse(data=[])
+
     from app.services.invoice import InvoiceService
-    
+
     invoice_service = InvoiceService(supabase)
-    
+
     overdue = await invoice_service.get_overdue(
-        organization_id=current_user["organization_id"]
+        organization_id=organization_id
     )
-    
+
     return SuccessResponse(data=overdue)
 

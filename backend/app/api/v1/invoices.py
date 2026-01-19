@@ -2,7 +2,7 @@
 Invoice API endpoints
 """
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from supabase import Client
 
 from app.core.dependencies import get_supabase_admin_client, get_current_user
@@ -41,8 +41,28 @@ async def list_invoices(
     """
     invoice_service = InvoiceService(supabase)
     
+    # Handle string "None" or "null" from query params
+    if client_id in ("None", "null", "undefined", ""):
+        client_id = None
+    if status in ("None", "null", "undefined", ""):
+        status = None
+    
+    # Get organization_id and handle invalid values
+    organization_id = current_user.get("organization_id")
+    if not organization_id:
+        # User not associated with an organization, return empty list
+        return SuccessResponse(data={
+            "invoices": [],
+            "meta": {
+                "page": page,
+                "per_page": per_page,
+                "total": 0,
+                "total_pages": 0
+            }
+        })
+    
     result = await invoice_service.list(
-        organization_id=current_user["organization_id"],
+        organization_id=organization_id,
         status=status,
         client_id=client_id,
         page=page,

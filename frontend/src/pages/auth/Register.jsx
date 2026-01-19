@@ -24,7 +24,7 @@ export default function Register() {
         email: data.email,
         password: data.password,
         full_name: data.fullName,
-        company_name: data.companyName || null,
+        company_name: data.companyName,
       })
       toast.success('Account created successfully!')
       navigate('/dashboard')
@@ -70,19 +70,28 @@ export default function Register() {
           )}
         </div>
 
-        {/* Company Name (optional) */}
+        {/* Company Name */}
         <div>
           <label htmlFor="companyName" className="label">
-            Company name <span className="text-slate-400 font-normal">(optional)</span>
+            Company name
           </label>
           <input
             type="text"
             id="companyName"
             autoComplete="organization"
-            className="input"
+            className={`input ${errors.companyName ? 'input-error' : ''}`}
             placeholder="Acme Inc."
-            {...register('companyName')}
+            {...register('companyName', {
+              required: 'Company name is required',
+              minLength: {
+                value: 2,
+                message: 'Company name must be at least 2 characters',
+              },
+            })}
           />
+          {errors.companyName && (
+            <p className="mt-1 text-sm text-danger-500">{errors.companyName.message}</p>
+          )}
         </div>
 
         {/* Email */}

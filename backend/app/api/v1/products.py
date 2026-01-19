@@ -34,8 +34,25 @@ async def list_products(
     """
     product_service = ProductService(supabase)
     
+    # Handle string "None" or "null" from query params
+    if search in ("None", "null", "undefined", ""):
+        search = None
+    
+    # Check if user has an organization
+    organization_id = current_user.get("organization_id")
+    if not organization_id:
+        return SuccessResponse(data={
+            "products": [],
+            "meta": {
+                "page": page,
+                "per_page": per_page,
+                "total": 0,
+                "total_pages": 0
+            }
+        })
+    
     result = await product_service.list(
-        organization_id=current_user["organization_id"],
+        organization_id=organization_id,
         search=search,
         include_inactive=include_inactive,
         page=page,

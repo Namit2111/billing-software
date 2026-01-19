@@ -34,8 +34,25 @@ async def list_clients(
     """
     client_service = ClientService(supabase)
     
+    # Handle string "None" or "null" from query params
+    if search in ("None", "null", "undefined", ""):
+        search = None
+    
+    # Check if user has an organization
+    organization_id = current_user.get("organization_id")
+    if not organization_id:
+        return SuccessResponse(data={
+            "clients": [],
+            "meta": {
+                "page": page,
+                "per_page": per_page,
+                "total": 0,
+                "total_pages": 0
+            }
+        })
+    
     result = await client_service.list(
-        organization_id=current_user["organization_id"],
+        organization_id=organization_id,
         search=search,
         include_inactive=include_inactive,
         page=page,
